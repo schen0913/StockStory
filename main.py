@@ -2,7 +2,7 @@ import json
 import sys
 import os
 import pandas as pd
-from DataProcessor import DataProcessor
+from src.DataProcessor import DataProcessor
 
 def main():
     if len(sys.argv) < 2:
