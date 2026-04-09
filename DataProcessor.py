@@ -65,13 +65,18 @@ class DataProcessor:
         if self.df is not None:
             self.df['SMA20'] = self.df['Close'].rolling(window=short_window).mean()
             self.df['SMA50'] = self.df['Close'].rolling(window=long_window).mean()
+        return self.df
+    
+    def add_signals(self):
+        """STORY 2: Indentifies Golden and Death Crosses based on SMA20 and SMA50"""
+        if self.df is not None:
+            if 'SMA20' not in self.df.columns or 'SMA50' not in self.df.columns:
+                self.add_moving_averages()
 
-            """
-            Optional dection of crossover signals:
             self.df['Signal'] = 0
-            self.df['Signal'] = np.where(self.df['SMA20'] > self.df['SMA50'], 1, 0)
-            self.df["Crossover"] = self.df['Signal'].diff()
-            """
+            self.df.loc[self.df['SMA20'] > self.df['SMA50'], 'Signal'] = 1
+            self.df.loc['Crossover'] = self.df['Signal'].diff()
+
         return self.df
     
     def add_returns(self):
@@ -98,6 +103,7 @@ class DataProcessor:
     def process_all(self):
         if self.df is not None:
             self.add_moving_averages()
+            self.add_signals()
             self.add_returns()
             self.add_volatility()
             self.add_normalization()
