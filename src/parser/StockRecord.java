@@ -1,3 +1,4 @@
+package src.parser;
 public class StockRecord 
 {
     public String date;
