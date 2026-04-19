@@ -31,24 +31,28 @@ st.markdown("""
 
 def run_pipeline(uploaded_file):
     os.makedirs("outputs", exist_ok=True)
-    input_path = f"outputs/{uploaded_file.name}"
+    input_path = os.path.join("outputs", uploaded_file.name)
     with open(input_path, "wb") as f:
         f.write(uploaded_file.read())
 
     ticker = uploaded_file.name.split('.')[0].upper()
-    json_path = f"outputs/{ticker}_records.json"
+    json_path = os.path.join("outputs", f"{ticker}_records.json")
 
-    sep = ";" if sys.platform == "win32" else ":"
-    classpath = f"antlr-4.13.1-complete.jar{sep}src/parser"
+    is_windows = sys.platform == "win32"
+    sep = ";" if is_windows else ":"
+    parser_dir = os.path.join("src", "parser")
+    classpath = f"antlr-4.13.1-complete.jar{sep}{parser_dir}"
+    java_cmd = "java.exe" if is_windows else "java"
 
     result = subprocess.run(
-        ["java", "-cp", classpath, "Main", input_path, json_path],
-        capture_output=True, text=True
+        [java_cmd, "-cp", classpath, "Main", input_path, json_path],
+        capture_output=True, text=True,
+        shell=is_windows
     )
 
     if result.returncode != 0 or not os.path.exists(json_path):
         st.error(f"Java parser failed for {ticker}:")
-        st.code(result.stderr)
+        st.code(result.stderr or result.stdout or "No output from Java process.")
         return None, None
 
     processor = DataProcessor(ticker)
@@ -62,19 +66,11 @@ def run_pipeline(uploaded_file):
 
 
 def stat_cards(ticker, df, color):
-    last_close = df['Close'].iloc[-1]
-    change_str = ""
-    if len(df) >= 2:
-        prev_close = df['Close'].iloc[-2]
-        change_pct = ((last_close - prev_close) / prev_close) * 100
-        change_class = "change-up" if change_pct >= 0 else "change-down"
-        change_sign = "+" if change_pct >= 0 else ""
 
     st.markdown(f"""
     <div class="ticker-header">
         <span style="font-size:22px;font-weight:600;color:{color}">{ticker}</span>
         <span style="font-size:13px;color:#888">{len(df)} trading days</span>
-        {change_str}
     </div>
     """, unsafe_allow_html=True)
 
