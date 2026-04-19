@@ -53,9 +53,6 @@ if [ ! -f "src/parser/Main.class" ] || [ ! -f "src/parser/StockStoryListener.cla
         echo "Error: Java compilation failed (pass 2)."
         exit 1
     fi
-    echo "      Done."
-else
-    echo "      Already compiled, skipping."
 fi
 
 # Step 2: Run Java parser (CSV -> JSON)
@@ -74,8 +71,4 @@ if [ $? -ne 0 ]; then
     echo "Error: Python analysis failed."
     exit 1
 fi
-echo "      Done. Report saved to ${OUTDIR}/${TICKER}_analysis_report.csv"
 
-echo "----------------------------------------"
-echo " Pipeline complete! Files saved to: $OUTDIR"
-echo "----------------------------------------"
