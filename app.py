@@ -29,6 +29,34 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
+def compile_java():
+    is_windows = sys.platform == "win32"
+    sep = ";" if is_windows else ":"
+    parser_dir = os.path.join("src", "parser")
+
+    # Generate parser from grammar
+    subprocess.run(
+        ["java", "-cp", "antlr-4.13.1-complete.jar",
+         "org.antlr.v4.Tool", "Stock.g4"],
+        cwd=parser_dir, capture_output=True
+    )
+
+    # Compile all Java
+    result = subprocess.run(
+        ["javac", "-cp", f"antlr-4.13.1-complete.jar{sep}{parser_dir}",
+         f"{parser_dir}/StockLexer.java",
+         f"{parser_dir}/StockParser.java",
+         f"{parser_dir}/StockListener.java",
+         f"{parser_dir}/StockBaseListener.java",
+         f"{parser_dir}/StockRecord.java",
+         f"{parser_dir}/StockStoryListener.java",
+         "src/Main.java",
+         "-d", parser_dir],
+        capture_output=True, text=True
+    )
+    return result
+
+
 def run_pipeline(uploaded_file):
     os.makedirs("outputs", exist_ok=True)
     input_path = os.path.join("outputs", uploaded_file.name)
@@ -42,10 +70,17 @@ def run_pipeline(uploaded_file):
     sep = ";" if is_windows else ":"
     parser_dir = os.path.join("src", "parser")
     classpath = f"antlr-4.13.1-complete.jar{sep}{parser_dir}"
-    java_cmd = "java.exe" if is_windows else "java"
+
+    # Compile if Main.class is missing
+    if not os.path.exists(os.path.join(parser_dir, "Main.class")):
+        result = compile_java()
+        if result.returncode != 0:
+            st.error("Java compilation failed:")
+            st.code(result.stderr)
+            return None, None
 
     result = subprocess.run(
-        [java_cmd, "-cp", classpath, "Main", input_path, json_path],
+        ["java", "-cp", classpath, "Main", input_path, json_path],
         capture_output=True, text=True,
         shell=is_windows
     )
@@ -66,7 +101,6 @@ def run_pipeline(uploaded_file):
 
 
 def stat_cards(ticker, df, color):
-
     st.markdown(f"""
     <div class="ticker-header">
         <span style="font-size:22px;font-weight:600;color:{color}">{ticker}</span>
@@ -191,4 +225,4 @@ if df1 is not None:
 else:
     st.markdown('<h2 style="color:#002060">StockStory</h2>', unsafe_allow_html=True)
     st.markdown("Upload a raw OHLCV `.csv` file in the sidebar to get started.")
-    st.markdown("Expected columns: `Date, Open, High, Low, Close, Volume`")
+    st.info("Expected columns: `Date, Open, High, Low, Close, Volume`")
