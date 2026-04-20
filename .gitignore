@@ -5,17 +5,10 @@ __pycache__/
 venv/
 .venv/
 
-# --- Java Junk ---
-# This ignores the compiled binaries so only your .java code stays on Git
-*.class
-src/*.class
-src/parser/*.class
-
 # --- ANTLR & System ---
 .antlr/
 .DS_Store
 Thumbs.db
 
 # --- Project Specific ---
-# Ignore the intermediate JSON if you want to keep 'outputs' only for the final CSVs
-# outputs/*.json
+outputs/*.json

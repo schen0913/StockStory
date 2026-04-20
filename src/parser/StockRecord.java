@@ -1,3 +1,4 @@
+
 public class StockRecord 
 {
     public String date;
